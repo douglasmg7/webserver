@@ -1,0 +1,234 @@
+{{template "base" .}}
+
+{{define "embedded-css"}} 
+<style type="text/css">
+	tr {
+		cursor: pointer;
+	}
+    input.btn {
+        margin-top: 0;
+    }
+    input.create-product {
+        margin-top: 1rem;
+    }
+    .success {
+        color: var(--green);
+    }
+    .warn {
+        color: var(--yellow);
+    }
+    .danger {
+        color: var(--red);
+    }
+    h3 {
+        font-weight: 500;
+    }
+    h3.status.new {
+        color: var(--green);
+    }
+    h3.status.changed
+    {
+        color: var(--yellow);
+    }
+    h3.status.unavailable {
+        color: var(--orange);
+    }
+    h3.status.removed {
+        color: var(--red);
+    }
+    .techinical-description p,
+    .rma-procedure p
+    {
+        font-size: 1.2em;
+        background-color: var(--white);
+        padding: .5em;
+    }
+    .techinical-description strong,
+    .rma-procedure strong
+    {
+        font-weight: 500;
+    }
+    a {
+        font-size: 2.2rem;
+    }
+    input.exit {
+        margin-top: 2em;
+    }
+    p.new {
+        background-color: var(--green-lll);
+        margin-bottom: 1rem;
+    }
+    p.old {
+        background-color: var(--red-lll);
+    }
+</style>
+{{end}}
+
+{{define "title"}} Produtos Aldo {{end}}
+
+{{define "content"}}
+<div class="content">
+    <h2> Produto Aldo </h2>
+    {{if (eq .Status "new")}} <h3 class="status new">Novo</h3> {{end}}
+    {{if (eq .Status "changed")}} <h3 class="status changed">Alterado</h3> {{end}}
+    {{if (eq .Status "unavailable")}} <h3 class="status unavailable">Indisponível</h3> {{end}}
+    {{if (eq .Status "removed")}} <h3 class="status removed">Removido</h3> {{end}}
+
+    {{if or (eq .Status "new")  (eq .Status "changed")}}
+        <form action="/ns/aldo/product/{{.Product.Code}}/checked" method="post">
+            <input class="btn" type="submit" value='Verificado'>
+        </form>
+    {{end}}
+
+
+	<h3>Descrição</h3>
+    {{if or (ne .Status "changed") (eq .Product.Description .ProductOld.Description)}}
+	    <p>{{.Product.Description}}</p>
+    {{else}}
+        <p class="new">{{.Product.Description}}</p>
+	    <p class="old">{{.ProductOld.Description}}</p>
+    {{end}}
+
+
+	<h3>Categoria</h3>
+    {{if or (ne .Status "changed") (eq .Product.Category .ProductOld.Category)}}
+	    <p>{{.Product.Category}}</p>
+    {{else}}
+        <p class="new">{{.Product.Category}}</p>
+	    <p class="old">{{.ProductOld.Category}}</p>
+    {{end}}
+
+
+	{{if .ShowButtonCreateProduct}}
+        <form action="" method="post">
+            <input class="btn create-product" type="submit" value='Criar produto'>
+        </form>
+    {{end}}
+    {{if ne .Product.MongodbId ""}}
+	    <h3>Produto id (loja)</h3>
+	    <a href='/admin/product/{{.Product.MongodbId}}'>{{.Product.MongodbId}}</a>
+	{{end}}
+
+    <img src='{{.Product.PictureLink}}'>
+
+
+	<h3>Data de criação</h3>
+	<p>{{.Product.CreatedAt}}</p>
+
+
+	<h3>Data de modificação</h3>
+    {{if or (ne .Status "changed") (eq .Product.ChangedAt .ProductOld.ChangedAt)}}
+	    <p>{{.Product.ChangedAt}}</p>
+    {{else}}
+        <p class="new">{{.Product.ChangedAt}}</p>
+	    <p class="old">{{.ProductOld.ChangedAt}}</p>
+    {{end}}
+    
+    
+	<h3>Data verificado</h3>
+	<p>{{.Product.StatusCleanedAt}}</p>
+
+
+	<h3>Código Aldo</h3>
+	<p>{{.Product.Code}}</p>
+
+
+	<h3>Marca</h3>
+    {{if or (ne .Status "changed") (eq .Product.Brand .ProductOld.Brand)}}
+	    <p>{{.Product.Brand}}</p>
+    {{else}}
+        <p class="new">{{.Product.Brand}}</p>
+	    <p class="old">{{.ProductOld.Brand}}</p>
+    {{end}}
+
+
+	<h3>Preço do fornecedor</h3>
+    {{if or (ne .Status "changed") (eq .Product.DealerPrice .ProductOld.DealerPrice)}}
+        <p>{{.Product.DealerPrice.Format}}</p>
+    {{else}}
+        <p class="new">{{.Product.DealerPrice.Format}}</p>
+	    <p class="old">{{.ProductOld.DealerPrice.Format}}</p>
+    {{end}}
+
+
+	<h3>Preço sugerido</h3>
+    {{if or (ne .Status "changed") (eq .Product.SuggestionPrice .ProductOld.SuggestionPrice)}}
+	    <p>{{.Product.SuggestionPrice.Format}}</p>
+    {{else}}
+        <p class="new">{{.Product.SuggestionPrice.Format}}</p>
+	    <p class="old">{{.ProductOld.SuggestionPrice.Format}}</p>
+    {{end}}
+
+
+	<h3>Descrição técnica</h3>
+    <div class="techinical-description">
+        {{if or (ne .Status "changed") (eq .TechnicalDescription .TechnicalDescriptionOld)}}
+            <p>{{.TechnicalDescription}}</p>
+        {{else}}
+            <p class="new">{{.TechnicalDescription}}</p>
+            <p class="old">{{.TechnicalDescriptionOld}}</p>
+        {{end}}
+    </div>
+
+	<h3>Comprimento</h3>
+    {{if or (ne .Status "changed") (eq .Product.Length .ProductOld.Length)}}
+        <p>{{.Product.Length}}</p>
+    {{else}}
+        <p class="new">{{.Product.Length}}</p>
+        <p class="old">{{.ProductOld.Length}}</p>
+    {{end}}
+
+
+	<h3>Largura</h3>
+    {{if or (ne .Status "changed") (eq .Product.Width .ProductOld.Width)}}
+        <p>{{.Product.Width}}</p>
+    {{else}}
+        <p class="new">{{.Product.Width}}</p>
+        <p class="old">{{.ProductOld.Width}}</p>
+    {{end}}
+
+
+	<h3>Altura</h3>
+    {{if or (ne .Status "changed") (eq .Product.Height .ProductOld.Height)}}
+        <p>{{.Product.Height}}</p>
+    {{else}}
+        <p class="new">{{.Product.Height}}</p>
+        <p class="old">{{.ProductOld.Height}}</p>
+    {{end}}
+
+
+	<h3>Peso</h3>
+    {{if or (ne .Status "changed") (eq .Product.Weight .ProductOld.Weight)}}
+        <p>{{.Product.Weight}}</p>
+    {{else}}
+        <p class="new">{{.Product.Weight}}</p>
+        <p class="old">{{.ProductOld.Weight}}</p>
+    {{end}}
+
+
+	<!-- PictureLink          string      `db:"picture_link"` -->
+
+	
+	<h3>Tempo de garantia</h3>
+    {{if or (ne .Status "changed") (eq .Product.WarrantyPeriod .ProductOld.WarrantyPeriod)}}
+        <p>{{.Product.WarrantyPeriod}} meses</p>
+    {{else}}
+        <p class="new">{{.Product.WarrantyPeriod}} meses</p>
+        <p class="old">{{.ProductOld.WarrantyPeriod}} meses</p>
+    {{end}}
+
+
+	<h3>Procedimento RMA</h3>
+    <div class="rma-procedure">
+        {{if or (ne .Status "changed") (eq .Product.RMAProcedure .ProductOld.RMAProcedure)}}
+            <p>{{.Product.RMAProcedure}}</p>
+        {{else}}
+            <p class="new">{{.Product.RMAProcedure}}</p>
+            <p class="old">{{.ProductOld.RMAProcedure}}</p>
+        {{end}}
+    </div>
+
+    <!-- Products page. -->
+    <input class="btn exit" type="button" onclick="location.href='/ns/aldo/products'" value='Sair'>
+</div>
+{{end}}

@@ -1,0 +1,71 @@
+{{define "menu"}}
+<!-- Categories -->
+<div class="sub-menu">
+    <a class="item toggle-items" href="#">
+        Categorias&nbsp
+        <i class="fas fa-xs fa-chevron-up fa-rotate-90"></i>
+    </a>
+    <div class="items">
+        <a class="item back" href="#">
+            <i class="fas fa-xs fa-chevron-up fa-rotate-270"></i>
+            &nbspMenu
+        </a>
+        {{ range .Session.Categories }}
+            <a class="item" href="/all/{{.}}">
+                {{.}}
+            </a>
+        {{end}}
+    </div>
+</div>
+<!-- Admin -->
+{{if .Session.UserGroups.IsAdmin}}
+    <div class="sub-menu">
+        <a class="item toggle-items" href="#">
+            Admin&nbsp
+            <i class="fas fa-xs fa-chevron-up fa-rotate-90"></i>
+        </a>
+        <div class="items">
+            <a class="item back" href="#">
+                <i class="fas fa-xs fa-chevron-up fa-rotate-270"></i>
+                &nbspMenu
+            </a>
+            <a class="item" href="/admin/orders">Pedidos</a>
+            <a class="item" href="/admin">Produtos</a>
+            <a class="item" href="/admin/product/new">Criar produto</a>
+            <a class="item" href="/admin/users">Usuários</a>
+            <a class="item" href="/admin/banner">Banners</a>
+            <a class="item" href="/admin/image">Imagens</a>
+            <a class="item" href="/admin/region-freights">Frete</a>
+            <a class="item" href="/admin/motoboy-freights">Motoboy</a>
+            <a class="item" href="/admin/markdown">Markdown</a>
+            <a class="item" href="/ns/aldo/products">Aldo</a>
+            <a class="item" href="/ns/allnations/products">Allnations</a>
+            <a class="item" href="/info/changelog">Versão</a>
+        </div>
+    </div>
+{{end}}
+<!-- Account -->
+<div class="sub-menu">
+    <a class="item toggle-items" href="#">
+        Minha conta&nbsp
+        <i class="fas fa-xs fa-chevron-up fa-rotate-90"></i>
+    </a>
+    <div class="items">
+        <a class="item back" href="#">
+            <i class="fas fa-xs fa-chevron-up fa-rotate-270"></i>
+            &nbspMenu
+        </a>
+        {{if eq .Session.UserName ""}}
+            <a class="item" href="/cart">Meu carrinho</a>
+            <a class="item" href="/auth/signin">Entrar</a>
+        {{else}}
+            <p class="item">{{ .Session.UserName }}</p>
+            <a class="item" href="/cart">Meu carrinho</a>
+            <a class="item" href="/user/orders">Meus pedidos</a>
+            <a class="item" href="/user/address">Meus endereços</a>
+            <a class="item" href="/user/access">Meus dados</a>
+            <a class="item" href="/auht/signout">Sair</a>            
+        {{end}}
+    </div>
+</div>
+{{end}}

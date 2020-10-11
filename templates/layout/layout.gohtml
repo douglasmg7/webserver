@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang='en'>
+    <head>
+        <!-- <meta Content-Type='text/html' charset='utf-8'> -->
+        <meta charset='utf-8'>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="webserver">
+        <title>{{template "title" .}}</title>
+		<!-- <link href="https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i&display=swap" rel="stylesheet">  -->
+        <link rel='stylesheet' href='/static/css/base/normalize.css?0001'>
+		<link rel='stylesheet' href='/static/css/base/reset.css?v0001'>
+        <link rel='stylesheet' href='/static/css/base/layout.css?000.1'>
+        <link rel='stylesheet' href='/static/fontawesome/css/all.min.css?000.1'>
+        {{template "embedded-css"}}
+        <!-- <link rel='shortcut icon' href='/static/img/favicon.ico' type='image/x-icon'> -->
+    </head>
+    <body>
+        <div id="header"> 
+            {{template "header" .}} 
+        </div>
+        <div id="menu-container">
+            <div id="menu"> 
+                {{template "menu" .}} 
+            </div>
+        </div>
+        <main id="app"> 
+            <h3>Olá</h3>
+            {{template "content" .}} 
+        </main>
+        <footer> 
+            {{template "footer" .}} 
+        </footer>
+        <script src="/static/js/base/layout.js?0001"></script>
+        {{template "embedded-js"}} 
+    </body>
+</html>
+
+{{define "embedded-css"}} {{end}}
+{{define "embedded-js"}} {{end}}

@@ -1,0 +1,51 @@
+{{define "menu"}}
+        <a class="item brand" href="/">Home</a>
+        <!-- Aldo -->
+        <div class="sub-menu">
+          <!-- <a class="item toggle-items" href="#">Aldo</a> -->
+          <div class="item toggle-items">Aldo</div>
+          <div class="items">
+              <a class="item back" href="#">< Menu</a>
+              <a class="item" href="/ns/aldo/products">Produtos</a>
+              <a class="item" href="/ns/aldo/categories">Categorias</a>
+          </div>
+        </div>
+        <div class="sub-menu">
+          <!-- <a class="item toggle-items" href="#">Aldo</a> -->
+          <div class="item toggle-items">Allnations</div>
+          <div class="items">
+              <a class="item back" href="#">< Menu</a>
+              <a class="item" href="/ns/allnations/products">Produtos</a>
+              <a class="item" href="/ns/allnations/filters">Filtros</a>
+              <a class="item" href="/ns/allnations/categories">Categorias</a>
+              <a class="item" href="/ns/allnations/makers">Fabricantes</a>
+          </div>
+        </div>
+        <!-- Admin -->
+        {{if .Session }} {{if .Session.CheckPermission "admin"}}
+        <div class="sub-menu">
+          <a class="item toggle-items" href="#">Admin</a>
+          <div class="items">
+              <a class="item back" href="#">< Menu</a>
+              <a class="item" href="/ns/changelog">Versão</a>
+              <a class="item" href="/ns/clean-sessions">Limpar seções</a>
+              <a class="item" href="/ns/test">Página de testes</a>
+          </div>
+        </div>
+        {{end}}{{end}}
+        <!-- Signin -->
+        {{if not .Session}}
+        <a class="item" href="/ns/auth/signin">Entrar</a>
+        {{end}}
+        <!-- Account -->
+        {{if .Session}}
+        <div class="sub-menu">
+          <a class="item toggle-items" href="#">Conta</a></li>
+          <div class="items">
+              <a class="item back" href="#">< Menu</a>
+              <a class="item" href="/ns/user/account">{{.Session.UserName}}</a>
+              <a class="item" href="/ns/auth/signout">Sair</a>
+          </div>
+        </div>
+        {{end}}
+{{end}}

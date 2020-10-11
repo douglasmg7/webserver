@@ -1,0 +1,23 @@
+.pagination {
+  font-size: 1em;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+.pagination a {
+  text-decoration: none;
+  margin: 0;
+  padding: 0 1em;
+  color: var(--black-darker);
+  cursor: pointer;
+}
+.pagination a:hover {
+  font-weight: bold;
+}
+.pagination a[active] {
+  color: var(--green-dark);
+  font-weight: bold;
+}

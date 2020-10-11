@@ -1,0 +1,15 @@
+[commit]
+    Removed muiltiplo and unit.
+    Send whole technical product description to create product on zunka site.
+
+implement password change.
+
+implement password forgotten.
+
+change .tmpl to .gohtml
+
+https://en.wikipedia.org/wiki/The_7_Habits_of_Highly_Effective_People
+
+https://play.golang.org/p/mlTh2OUM_Tk
+
+Clean up session on cache and db from time to time.

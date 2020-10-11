@@ -1,0 +1,32 @@
+{{define "header"}}
+<a class="brand" href="/">
+    <img src="/static/img/logo.png"></img>
+</a>
+<span class="search">
+    <i class="fas fa-search fa-lg" onclick="searchDesktop()" style="color: black;"></i>
+    <input id="search" onkeyup="searchDesktop(event)" placeholder="O que você procura?">
+</span>
+<span class="space"></span>
+<a class="cart" href="/cart">
+    <svg class="icon">
+        <use xlink:href="/static/icon/sprite.svg#ic_shopping_cart_white_24px"></use>
+    </svg>
+    <span id="cart-qtd"> {{.Session.CartProductsCount}} </span>
+</a>
+<div class="burger">
+    <span class="burger-box">
+        <span class="burger-inner"></span>
+    </span>
+</div>
+
+<script>
+  function searchDesktop(event){
+      if (!event || event.key === 'Enter') {
+          console.log("click");
+          console.log(document);
+          // Must be implemented on parent module.
+          _search(document.querySelectorAll('#search')[0].value);
+      }
+  }
+</script>
+{{end}}
