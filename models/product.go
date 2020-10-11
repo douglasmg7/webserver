@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"time"
 )
 
@@ -30,4 +31,13 @@ type Product struct {
 	CreatedAt     time.Time `db:"created_at"`
 	ChangedAt     time.Time `db:"changed_at"`
 	IsDeleted     bool      `db:"is_deleted"`
+}
+
+func GetAllProduct() (products []Product, err error) {
+	err = pgDB.Select(&products, "select * from products where is_deleted=$1", false)
+	if err != nil {
+		log.Printf("[error] %v\n", err)
+		return
+	}
+	return
 }

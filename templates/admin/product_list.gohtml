@@ -10,6 +10,13 @@
 
 {{define "content"}}
 <div class="content">
-    <h2>Produtos</h2>
+    <h2>{{.Session.UserName}}</h2>
+    {{range .Products}}
+        <h3>
+            <span>{{.ID}}</span>
+            <span>{{.Title}}</span>
+        </h3>
+    {{end}}
+
 </div>
 {{end}}

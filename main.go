@@ -1,7 +1,8 @@
 package main
 
 import (
-	"webserver/db"
+	"webserver/database"
+	"webserver/models"
 
 	"database/sql"
 	"log"
@@ -9,7 +10,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
+
+	_ "github.com/lib/pq" // postgres drive
 )
 
 const VERSION string = "0.1.0"
@@ -23,8 +27,10 @@ var test bool
 // todo - remove
 var dbZunka *sql.DB
 
-// Path for log, etc...
+// Path for log
 var workPath string
+
+var pgDB *sqlx.DB
 
 // Sessions from each user.
 var sessions = Sessions{
@@ -42,7 +48,6 @@ func init() {
 		development = true
 		mode = "development"
 	}
-	log.Printf("Running in %v mode (version %s)\n", mode, VERSION)
 
 	// Work path.
 	if workPath = os.Getenv("WEBSERVER_DATA"); workPath == "" {
@@ -52,11 +57,14 @@ func init() {
 
 	// Init log
 	initLog()
+
+	log.Printf("Running in %v mode (version %s)\n", mode, VERSION)
 }
 
 func main() {
-	db.Connect()
-	defer db.Close()
+	pgDB = database.ConnectPostgres()
+	defer database.ClosePostgres()
+	models.SetDb(pgDB)
 
 	// Router
 	router := httprouter.New()
@@ -64,6 +72,6 @@ func main() {
 
 	// Why log.Fall work here?
 	// log.Fatal(http.ListenAndServe(":"+port, router))
-	log.Println("listen on port", PORT)
+	log.Println("Listen port", PORT)
 	log.Fatal(http.ListenAndServe(":"+PORT, newLogger(router)))
 }
