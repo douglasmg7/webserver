@@ -8,7 +8,10 @@ import (
 )
 
 // Product list
-func AdminProductListHandlerGet(w http.ResponseWriter, req *http.Request) {
+func AdminProductListHandlerGet(w http.ResponseWriter, r *http.Request) {
+
+	user := r.Context().Value("user").(string)
+	log.Printf("The user is: %v", user)
 
 	// Get all products
 	products, err := models.GetAllProduct()

@@ -74,8 +74,9 @@ func main() {
 	// Categories
 	models.UpdateCategories()
 
+	log.Println("Listen port", PORT)
 	// Why log.Fall work here?
 	// log.Fatal(http.ListenAndServe(":"+port, router))
-	log.Println("Listen port", PORT)
-	log.Fatal(http.ListenAndServe(":"+PORT, newLogger(router)))
+	log.Fatal(http.ListenAndServe(":"+PORT, newLogger(newUserMiddleware(router))))
+	// log.Fatal(http.ListenAndServe(":"+PORT, newLogger(router)))
 }

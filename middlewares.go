@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"time"
@@ -103,4 +104,25 @@ func (l *logger) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // New logger.
 func newLogger(h http.Handler) *logger {
 	return &logger{handler: h}
+}
+
+/**************************************************************************************************
+* User middleware
+**************************************************************************************************/
+type userMiddlware struct {
+	handler http.Handler
+}
+
+func (l *userMiddlware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// log.Printf("userMiddlware called")
+	ctx := r.Context()
+	// Get new context with key-value "params" -> "httprouter.Params"
+	ctx = context.WithValue(ctx, "user", "John")
+	// Get new http.Request with the new context
+	r = r.WithContext(ctx)
+	l.handler.ServeHTTP(w, r)
+}
+
+func newUserMiddleware(h http.Handler) *userMiddlware {
+	return &userMiddlware{handler: h}
 }
