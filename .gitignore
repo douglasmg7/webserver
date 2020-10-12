@@ -1,5 +1,4 @@
-zunkasrv
-db/zunka.db
+webserver
 vendor/
 
 # Include directories but not the files.

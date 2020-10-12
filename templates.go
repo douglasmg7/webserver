@@ -4,19 +4,22 @@ import (
 	"html/template"
 )
 
+// Layout
 var tmplLayout *template.Template
-var tmplAdminProductList *template.Template
-
-// Geral.
-var tmplMaster *template.Template
-var tmplIndex *template.Template
-var tmplDeniedAccess *template.Template
 
 // Auth.
 var tmplAuthSignup *template.Template
 var tmplAuthSignin *template.Template
 var tmplPasswordRecovery *template.Template
 var tmplPasswordReset *template.Template
+
+// Admin
+var tmplAdminProductList *template.Template
+
+// Geral.
+var tmplMaster *template.Template
+var tmplIndex *template.Template
+var tmplDeniedAccess *template.Template
 
 // Misc.
 var tmplMessage *template.Template
@@ -36,6 +39,8 @@ var tmplUserDeleteAccount *template.Template
 func init() {
 	// Layout
 	tmplLayout = template.Must(template.ParseGlob("templates/layout/*"))
+
+	// Admin
 	tmplAdminProductList = template.Must(template.Must(tmplLayout.Clone()).ParseFiles("templates/admin/product_list.gohtml"))
 
 	// Geral.
@@ -45,7 +50,8 @@ func init() {
 
 	// Auth.
 	tmplAuthSignup = template.Must(template.Must(tmplMaster.Clone()).ParseFiles("templates/auth/signup.tpl"))
-	tmplAuthSignin = template.Must(template.Must(tmplMaster.Clone()).ParseFiles("templates/auth/signin.tpl"))
+	// tmplAuthSignin = template.Must(template.Must(tmplMaster.Clone()).ParseFiles("templates/auth/signin.tpl"))
+	tmplAuthSignin = template.Must(template.Must(tmplLayout.Clone()).ParseFiles("templates/auth/signin.gohtml"))
 	tmplPasswordRecovery = template.Must(template.Must(tmplMaster.Clone()).ParseFiles("templates/auth/passwordRecovery.tpl"))
 	tmplPasswordReset = template.Must(template.Must(tmplMaster.Clone()).ParseFiles("templates/auth/passwordReset.tpl"))
 

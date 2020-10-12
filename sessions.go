@@ -1,30 +1,24 @@
 package main
 
 import (
-	// "github.com/satori/go.uuid"
-
-	"database/sql"
 	"log"
 	"net/http"
-	"time"
 
 	uuid "github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
-// Measure execution time to retrive the session.
-// var timeToGetSession time.Time
+const SESSION_ID_COOKIE_NAME = "session_id"
 
-// SessionData cache data from each user.
-type SessionData struct {
-	UserID     int
-	UserName   string
-	Permission uint64
-	Outdated   bool // If true, session must be retrived from db.
+type Session struct {
+	UserID            int    `json:"userId"`
+	UserName          string `json:"userName"`
+	Permission        uint64 `json:"userPermission"`
+	CartProductsCount uint   `json:"cartProductsCount"`
+	ProductCategories []string
 }
 
 // CheckPermission return if session has the permission.
-func (s *SessionData) CheckPermission(p string) bool {
+func (s *Session) CheckPermission(p string) bool {
 	// Admin.
 	if s.Permission&1 == 1 {
 		return true
@@ -41,7 +35,7 @@ func (s *SessionData) CheckPermission(p string) bool {
 }
 
 // SetPermission grand permission.
-func (s *SessionData) SetPermission(p string) {
+func (s *Session) SetPermission(p string) {
 	switch p {
 	case "admin":
 		s.Permission = s.Permission | 1
@@ -53,7 +47,7 @@ func (s *SessionData) SetPermission(p string) {
 }
 
 // UnsetPermission revoke permission.
-func (s *SessionData) UnsetPermission(p string) {
+func (s *Session) UnsetPermission(p string) {
 	switch p {
 	case "admin":
 		s.Permission = s.Permission ^ 1
@@ -64,179 +58,71 @@ func (s *SessionData) UnsetPermission(p string) {
 	}
 }
 
-// PasswordIsCorrect return if password is correct.
-func (s *SessionData) PasswordIsCorrect(password string) bool {
-	// Get user by email.
-	var cryptedPassword []byte
-	err := dbZunka.QueryRow("SELECT password FROM user WHERE id = ?", s.UserID).Scan(&cryptedPassword)
-	// No registred user.
-	if err == sql.ErrNoRows {
-		return false
-	}
-	// Internal error.
-	if err != nil {
-		log.Fatal(err)
-	}
-	// Compare password.
-	err = bcrypt.CompareHashAndPassword(cryptedPassword, []byte(password))
-	// Incorrect password.
-	if err != nil {
-		return false
-	}
-	// Correct password.
-	return true
-}
-
-// Sessions contains sessions from each user and userId from each uuid sesscion.
-type Sessions struct {
-	// UserId from uuidSession.
-	mapUserID map[string]int
-	// Session from userId.
-	mapSessionData map[int]*SessionData
-}
-
-// CreateSession create a session and writing a cookie on client and keep a reletion of cookie -> user id.
-func (s *Sessions) CreateSession(w http.ResponseWriter, userID int) error {
+func createSession(w http.ResponseWriter, userID string) {
 	// create cookie
 	sUUID := uuid.NewV4()
-	sUUIDString := sUUID.String()
+	sessionID := sUUID.String()
 	// Save cookie.
 	http.SetCookie(w, &http.Cookie{
-		Name:  "sessionUUID",
-		Value: sUUIDString,
+		Name:  SESSION_ID_COOKIE_NAME,
+		Value: sessionID,
 		Path:  "/",
 		// Secure: true, // to use only in https
 		// HttpOnly: true, // Can't be used into js client
 	})
-	// Save session UUID on db.
-	stmt, err := dbZunka.Prepare(`INSERT INTO sessionUUID(uuid, user_id, createdAt) VALUES( ?, ?, ?)`)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(sUUIDString, userID, time.Now())
-	if err != nil {
-		return err
-	}
-	// Save on cache.
-	s.mapUserID[sUUIDString] = userID
-	return nil
+	redisSetUserID(sessionID, userID)
 }
 
-// RemoveSession remove session from client browser.
-func (s *Sessions) RemoveSession(w http.ResponseWriter, req *http.Request) {
-	c, err := req.Cookie("sessionUUID")
-	// No cookie.
+func saveSession(userID string, session *Session) {
+	redisSetSession(userID, session)
+}
+
+func removeSession(w http.ResponseWriter, req *http.Request) {
+	c, err := req.Cookie(SESSION_ID_COOKIE_NAME)
 	if err == http.ErrNoCookie {
-		// log.Println("No cookie")
-		http.Redirect(w, req, "/ns/", http.StatusSeeOther)
-		// Some error.
+		// No cookie.
+		http.Redirect(w, req, "/", http.StatusSeeOther)
 	} else if err != nil {
-		log.Fatal(err)
-		// Remove cookie.
+		// Some error.
+		log.Printf("[error] Getting cookie. %v", err)
+		http.Redirect(w, req, "/", http.StatusSeeOther)
 	} else {
+		// Remove cookie.
 		c.MaxAge = -1
 		c.Path = "/"
 		// log.Println("changed cookie:", c)
 		http.SetCookie(w, c)
 		http.Redirect(w, req, "/ns/auth/signin", http.StatusSeeOther)
-		// Delete userId session.
-		delete(s.mapUserID, c.Value)
+		redisDelUserID(c.Value)
 	}
 }
 
-// GetSession return session data from UUID.
-func (s *Sessions) GetSession(req *http.Request) (*SessionData, error) {
+func getSession(req *http.Request) *Session {
 	// timeToGetSession = time.Now()
-	userID, err := s.getUserIdfromSessionUUID(req)
-	// Some error.
-	if err != nil {
-		return nil, err
-		// No user id.
-	} else if userID == 0 {
-		return nil, nil
-		// Found user.
-	} else {
-		session, err := s.getSessionFromUserID(userID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// log.Println("Time to get session:", time.Since(timeToGetSession))
-		return session, err
-		// return sessionDataFromUserId(userID)
+	userID := getUserIDFromSessionID(req)
+	if userID == "" {
+		return &Session{}
 	}
+	return redisGetSession(userID)
 }
 
 // Return user id from session uuid.
 // Try the cache first.
-func (s *Sessions) getUserIdfromSessionUUID(req *http.Request) (int, error) {
-	cookie, err := req.Cookie("sessionUUID")
+func getUserIDFromSessionID(req *http.Request) string {
+	cookie, err := req.Cookie(SESSION_ID_COOKIE_NAME)
 	// log.Println("Cookie:", cookie.Value)
 	// log.Println("Cookie-err:", err)
 	// No cookie.
 	if err == http.ErrNoCookie {
-		return 0, nil
+		return ""
 		// some error
 	} else if err != nil {
-		return 0, err
+		return ""
 	}
 	// Have a cookie.
 	if cookie != nil {
-		sessionUUID := cookie.Value
-		userID := s.mapUserID[sessionUUID]
-		// Found on cache.
-		if userID != 0 {
-			// log.Println("userId from cache", userId)
-			return userID, nil
-		}
-		// Get from db.
-		err = dbZunka.QueryRow("select user_id from sessionUUID where uuid = ?", sessionUUID).Scan(&userID)
-		if err == sql.ErrNoRows {
-			return 0, nil
-		}
-		if err != nil {
-			// No user id for the sessionUUID.
-			return 0, err
-		}
-		// Found the user id.
-		if userID != 0 {
-			// log.Println("userId from db", userId)
-			s.mapUserID[sessionUUID] = userID
-			return userID, nil
-		}
+		return redisGetUserID(cookie.Value)
 	}
 	// No cookie
-	return 0, nil
-}
-
-// Get session from cache.
-// If not cached, cache it.
-func (s *Sessions) getSessionFromUserID(userID int) (session *SessionData, err error) {
-	// From the cache.
-	session = s.mapSessionData[userID]
-	// No cached nor outdated.
-	if session != nil && !session.Outdated {
-		return session, nil
-	}
-	// Cache from db.
-	// log.Println("Getting session data from cache:")
-	return s.cacheSession(userID)
-}
-
-// Cache session data and return it.
-func (s *Sessions) cacheSession(userID int) (session *SessionData, err error) {
-	session = &SessionData{}
-	err = dbZunka.QueryRow("select id, name, permission from user where id = ?", userID).Scan(&session.UserID, &session.UserName, &session.Permission)
-	if err != nil {
-		return nil, err
-	}
-	// Cache it.
-	s.mapSessionData[userID] = session
-	return session, nil
-}
-
-// CleanSessions clean the cache session.
-func (s *Sessions) CleanSessions() {
-	s.mapSessionData = map[int]*SessionData{}
-	log.Println("Sessions cache cleaned")
+	return ""
 }

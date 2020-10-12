@@ -15,7 +15,7 @@ import (
 
 // Change name template data.
 type changeNameTplData struct {
-	Session     *SessionData
+	Session     *Session
 	HeadMessage string
 	NewName     valueMsg
 	Password    valueMsg
@@ -23,7 +23,7 @@ type changeNameTplData struct {
 
 // Change email template data.
 type changeEmailTplData struct {
-	Session     *SessionData
+	Session     *Session
 	HeadMessage string
 	NewEmail    valueMsg
 	Password    valueMsg
@@ -31,7 +31,7 @@ type changeEmailTplData struct {
 
 // Change mobile number template data.
 type changeMobileTplData struct {
-	Session     *SessionData
+	Session     *Session
 	HeadMessage string
 	NewMobile   valueMsg
 	Password    valueMsg
@@ -42,9 +42,9 @@ type changeMobileTplData struct {
 **************************************************************************************************/
 
 // Account page.
-func userAccountHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userAccountHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	data := struct {
-		Session     *SessionData
+		Session     *Session
 		HeadMessage string
 		Name        string
 		Email       string
@@ -64,7 +64,7 @@ func userAccountHandler(w http.ResponseWriter, req *http.Request, _ httprouter.P
 }
 
 // Change name page.
-func userChangeNameHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userChangeNameHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	var data changeNameTplData
 	data.Session = session
 	// Get current name.
@@ -77,7 +77,7 @@ func userChangeNameHandler(w http.ResponseWriter, req *http.Request, _ httproute
 }
 
 // Change name post.
-func userChangeNameHandlerPost(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userChangeNameHandlerPost(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	var data changeNameTplData
 	data.Session = session
 	// Check fields.
@@ -88,14 +88,14 @@ func userChangeNameHandlerPost(w http.ResponseWriter, req *http.Request, _ httpr
 		HandleError(w, err)
 		return
 	}
-	// Wrong password.
-	if !session.PasswordIsCorrect(req.FormValue("password")) {
-		data.Password.Value = ""
-		data.Password.Msg = "Senha incorreta"
-		err := tmplUserChangeName.ExecuteTemplate(w, "userChangeName.tpl", data)
-		HandleError(w, err)
-		return
-	}
+	// // Wrong password.
+	// if !session.PasswordIsCorrect(req.FormValue("password")) {
+	// data.Password.Value = ""
+	// data.Password.Msg = "Senha incorreta"
+	// err := tmplUserChangeName.ExecuteTemplate(w, "userChangeName.tpl", data)
+	// HandleError(w, err)
+	// return
+	// }
 	// Update name.
 	stmt, err := dbZunka.Prepare(`UPDATE user SET name = ? WHERE id = ?`)
 	if err != nil {
@@ -106,15 +106,15 @@ func userChangeNameHandlerPost(w http.ResponseWriter, req *http.Request, _ httpr
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Sinalize to session be refreshed from db.
-	session.Outdated = true
+	// // Sinalize to session be refreshed from db.
+	// session.Outdated = true
 	// Redirect to account page.
 	http.Redirect(w, req, "/ns/user/account", http.StatusSeeOther)
 	return
 }
 
 // Change email page.
-func userChangeEmailHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userChangeEmailHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	var data changeEmailTplData
 	data.Session = session
 	// Get current email.
@@ -127,7 +127,7 @@ func userChangeEmailHandler(w http.ResponseWriter, req *http.Request, _ httprout
 }
 
 // Change Email post.
-func userChangeEmailHandlerPost(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userChangeEmailHandlerPost(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	var data changeEmailTplData
 	data.Session = session
 	// Check fields.
@@ -138,14 +138,14 @@ func userChangeEmailHandlerPost(w http.ResponseWriter, req *http.Request, _ http
 		HandleError(w, err)
 		return
 	}
-	// Wrong password.
-	if !session.PasswordIsCorrect(req.FormValue("password")) {
-		data.Password.Value = ""
-		data.Password.Msg = "Senha incorreta"
-		err := tmplUserChangeEmail.ExecuteTemplate(w, "userChangeEmail.tpl", data)
-		HandleError(w, err)
-		return
-	}
+	// // Wrong password.
+	// if !session.PasswordIsCorrect(req.FormValue("password")) {
+	// data.Password.Value = ""
+	// data.Password.Msg = "Senha incorreta"
+	// err := tmplUserChangeEmail.ExecuteTemplate(w, "userChangeEmail.tpl", data)
+	// HandleError(w, err)
+	// return
+	// }
 	// Verify if email alredy in use.
 	var userName string
 	err := dbZunka.QueryRow("select name from user where email = ?", data.NewEmail.Value).Scan(&userName)
@@ -195,7 +195,7 @@ func userChangeEmailHandlerPost(w http.ResponseWriter, req *http.Request, _ http
 }
 
 // Change Email confirmation.
-func userChangeEmailConfirmationHandler(w http.ResponseWriter, req *http.Request, ps httprouter.Params, session *SessionData) {
+func userChangeEmailConfirmationHandler(w http.ResponseWriter, req *http.Request, ps httprouter.Params, session *Session) {
 	var msgData messageTplData
 	msgData.Session = session
 	// Find email certify.
@@ -258,7 +258,7 @@ func userChangeEmailConfirmationHandler(w http.ResponseWriter, req *http.Request
 }
 
 // Change mobile number page.
-func userChangeMobileHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userChangeMobileHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	var data changeMobileTplData
 	data.Session = session
 	// Get current mobile number.
@@ -271,7 +271,7 @@ func userChangeMobileHandler(w http.ResponseWriter, req *http.Request, _ httprou
 }
 
 // Change mobile number post.
-func userChangeMobileHandlerPost(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func userChangeMobileHandlerPost(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	var data changeMobileTplData
 	data.Session = session
 	// Remove spaces.
@@ -287,14 +287,14 @@ func userChangeMobileHandlerPost(w http.ResponseWriter, req *http.Request, _ htt
 			return
 		}
 	}
-	// Wrong password.
-	if !session.PasswordIsCorrect(req.FormValue("password")) {
-		data.Password.Value = ""
-		data.Password.Msg = "Senha incorreta"
-		err := tmplUserChangeMobile.ExecuteTemplate(w, "userChangeMobile.tpl", data)
-		HandleError(w, err)
-		return
-	}
+	// // Wrong password.
+	// if !session.PasswordIsCorrect(req.FormValue("password")) {
+	// data.Password.Value = ""
+	// data.Password.Msg = "Senha incorreta"
+	// err := tmplUserChangeMobile.ExecuteTemplate(w, "userChangeMobile.tpl", data)
+	// HandleError(w, err)
+	// return
+	// }
 	// Update mobile number.
 	stmt, err := dbZunka.Prepare(`UPDATE user SET mobile = ? WHERE id = ?`)
 	if err != nil {
@@ -305,8 +305,8 @@ func userChangeMobileHandlerPost(w http.ResponseWriter, req *http.Request, _ htt
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Sinalize to session be refreshed from db.
-	session.Outdated = true
+	// // Sinalize to session be refreshed from db.
+	// session.Outdated = true
 	// Redirect to account page.
 	http.Redirect(w, req, "/ns/user/account", http.StatusSeeOther)
 	return

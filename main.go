@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/jmoiron/sqlx"
 	"github.com/julienschmidt/httprouter"
 
@@ -30,13 +31,9 @@ var dbZunka *sql.DB
 // Path for log
 var workPath string
 
+// Dbs
 var pgDB *sqlx.DB
-
-// Sessions from each user.
-var sessions = Sessions{
-	mapUserID:      map[string]int{},
-	mapSessionData: map[int]*SessionData{},
-}
+var redisDB *redis.Client
 
 func init() {
 	// Run mode
@@ -62,13 +59,20 @@ func init() {
 }
 
 func main() {
+	// Init Postgres
 	pgDB = database.ConnectPostgres()
 	defer database.ClosePostgres()
 	models.SetDb(pgDB)
 
+	// Init Redis
+	ConnectRedis()
+
 	// Router
 	router := httprouter.New()
 	configRouter(router)
+
+	// Categories
+	models.UpdateCategories()
 
 	// Why log.Fall work here?
 	// log.Fatal(http.ListenAndServe(":"+port, router))

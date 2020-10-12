@@ -16,7 +16,7 @@ import (
 )
 
 type signinTplData struct {
-	Session          *SessionData
+	Session          *Session
 	HeadMessage      string
 	Email            valueMsg
 	Password         valueMsg
@@ -26,7 +26,7 @@ type signinTplData struct {
 	SuccessMsgFooter string
 }
 type signupTplData struct {
-	Session         *SessionData
+	Session         *Session
 	HeadMessage     string
 	Name            valueMsg
 	Email           valueMsg
@@ -36,14 +36,14 @@ type signupTplData struct {
 	SuccessMsg      string
 }
 type passwordRecoveryTplData struct {
-	Session          *SessionData
+	Session          *Session
 	HeadMessage      string
 	Email            valueMsg
 	WarnMsgFooter    string
 	SuccessMsgFooter string
 }
 type passwordResetTplData struct {
-	Session          *SessionData
+	Session          *Session
 	HeadMessage      string
 	Email            valueMsg
 	EmailConfirm     valueMsg
@@ -243,7 +243,7 @@ func authSignupConfirmationHandler(w http.ResponseWriter, req *http.Request, ps 
 // Signin page.
 func authSigninHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	data := signinTplData{}
-	err := tmplAuthSignin.ExecuteTemplate(w, "signin.tpl", data)
+	err := tmplAuthSignin.ExecuteTemplate(w, "layout.gohtml", data)
 	HandleError(w, err)
 }
 
@@ -288,11 +288,11 @@ func authSigninHandlerPost(w http.ResponseWriter, req *http.Request, _ httproute
 		HandleError(w, err)
 		return
 	}
-	// Create session.
-	err = sessions.CreateSession(w, userID)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// // Create session.
+	// err = createSession(w, userID)
+	// if err != nil {
+	// log.Fatal(err)
+	// }
 	// Logged, redirect to main page.
 	http.Redirect(w, req, "/ns/", http.StatusSeeOther)
 	return
@@ -300,7 +300,7 @@ func authSigninHandlerPost(w http.ResponseWriter, req *http.Request, _ httproute
 
 // Signout.
 func authSignoutHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	sessions.RemoveSession(w, req)
+	removeSession(w, req)
 }
 
 /**************************************************************************************************

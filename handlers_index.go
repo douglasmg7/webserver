@@ -15,7 +15,7 @@ type valueMsg struct {
 
 // Template message data.
 type messageTplData struct {
-	Session    *SessionData
+	Session    *Session
 	TitleMsg   string
 	WarnMsg    string
 	SuccessMsg string
@@ -41,9 +41,9 @@ func faviconHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Param
 }
 
 // Index handler.
-func indexHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func indexHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	data := struct {
-		Session     *SessionData
+		Session     *Session
 		HeadMessage string
 	}{session, "Aviso de regatta na Lagoa dos Ingleses, dia 18/03/2019"}
 	// fmt.Println("session: ", data.Session)
@@ -52,14 +52,8 @@ func indexHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params,
 }
 
 // Index handler.
-func indexPing(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func indexPing(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	w.Write([]byte("Pong"))
-}
-
-// Clean sessions cache, needed when some db update occurs.
-func cleanSessionsHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
-	sessions.CleanSessions()
-	http.Redirect(w, req, "/ns/", http.StatusSeeOther)
 }
 
 /**************************************************************************************************

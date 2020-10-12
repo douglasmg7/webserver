@@ -1,16 +1,14 @@
 package main
 
 import (
-	"log"
 	"webserver/models"
 
+	"log"
 	"net/http"
-
-	"github.com/julienschmidt/httprouter"
 )
 
 // Product list
-func AdminProductListHandlerGet(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+func AdminProductListHandlerGet(w http.ResponseWriter, req *http.Request) {
 
 	// Get all products
 	products, err := models.GetAllProduct()
@@ -20,13 +18,13 @@ func AdminProductListHandlerGet(w http.ResponseWriter, req *http.Request, _ http
 	// log.Printf("Products: %v", products)
 
 	data := struct {
-		Session  Session
+		Session  *Session
 		Products []models.Product
 	}{
-		Session: Session{
-			UserName:          "Lucas",
+		Session: &Session{
+			UserName:          "",
 			CartProductsCount: 6,
-			Categories:        []string{"Notebook", "Monitor"},
+			ProductCategories: models.Categories,
 		},
 		Products: products,
 	}

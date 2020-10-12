@@ -7,9 +7,9 @@ import (
 )
 
 // Test page.
-func checkPageHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *SessionData) {
+func checkPageHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params, session *Session) {
 	data := struct {
-		Session *SessionData
+		Session *Session
 	}{session}
 
 	err := tmplTest.ExecuteTemplate(w, "test.gohtml", data)
@@ -17,7 +17,7 @@ func checkPageHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Par
 }
 
 // Test send mail.
-func checkSendMailPost(w http.ResponseWriter, req *http.Request, ps httprouter.Params, _ *SessionData) {
+func checkSendMailPost(w http.ResponseWriter, req *http.Request, ps httprouter.Params, _ *Session) {
 	msg := time.Now().String()
 	err := sendMail([]string{"douglasmg7@gmail.com"}, "Teste (zunkasrv).", msg)
 	if err == nil {

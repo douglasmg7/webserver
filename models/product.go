@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+var Categories []string
+
 type Product struct {
 	ID            uint      `db:"id"`
 	Code          string    `db:"code"`
@@ -40,4 +42,8 @@ func GetAllProduct() (products []Product, err error) {
 		return
 	}
 	return
+}
+
+func UpdateCategories() {
+	Categories = []string{"Notebook", "Monitor", "HD"}
 }

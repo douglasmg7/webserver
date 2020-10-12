@@ -7,8 +7,8 @@ import (
 
 func configRouter(router *httprouter.Router) {
 	router.GET("/favicon.ico", faviconHandler)
-	router.GET("/", getSession(indexHandler))
-	router.GET("/ping", getSession(indexPing))
+	router.GET("/", getSessionMidlleware(indexHandler))
+	router.GET("/ping", getSessionMidlleware(indexPing))
 
 	// Auth - signup.
 	router.GET("/auth/signup", confirmNoLogged(authSignupHandler))
@@ -26,10 +26,7 @@ func configRouter(router *httprouter.Router) {
 	router.GET("/auth/password/reset", confirmNoLogged(passwordResetHandler))
 
 	// Admin
-	router.GET("/admin/products", AdminProductListHandlerGet)
-
-	// Clean the session cache.
-	router.GET("/ns/clean-sessions", checkPermission(cleanSessionsHandler, "admin"))
+	router.HandlerFunc("GET", "/admin/products", AdminProductListHandlerGet)
 
 	// Test.
 	router.GET("/ns/test", checkPermission(checkPageHandler, "admin"))

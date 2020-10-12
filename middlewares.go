@@ -9,16 +9,13 @@ import (
 )
 
 // Handle with session.
-type handleS func(w http.ResponseWriter, req *http.Request, p httprouter.Params, session *SessionData)
+type handleS func(w http.ResponseWriter, req *http.Request, p httprouter.Params, session *Session)
 
 // Get session middleware.
-func getSession(h handleS) httprouter.Handle {
+func getSessionMidlleware(h handleS) httprouter.Handle {
 	return func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 		// Get session.
-		session, err := sessions.GetSession(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		session := getSession(req)
 		h(w, req, p, session)
 	}
 }
@@ -27,13 +24,10 @@ func getSession(h handleS) httprouter.Handle {
 func checkPermission(h handleS, permission string) httprouter.Handle {
 	return func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 		// Get session.
-		session, err := sessions.GetSession(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		session := getSession(req)
 		// Not signed.
-		if session == nil {
-			http.Redirect(w, req, "/ns/auth/signin", http.StatusSeeOther)
+		if session.UserName == "" {
+			http.Redirect(w, req, "/auth/signin", http.StatusSeeOther)
 			return
 		}
 		// Have the permission.
@@ -44,10 +38,10 @@ func checkPermission(h handleS, permission string) httprouter.Handle {
 		// No Permission.
 		// fmt.Fprintln(w, "Not allowed")
 		data := struct {
-			Session     *SessionData
+			Session     *Session
 			HeadMessage string
 		}{Session: session}
-		err = tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
+		err := tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
 		HandleError(w, err)
 	}
 }
@@ -56,18 +50,15 @@ func checkPermission(h handleS, permission string) httprouter.Handle {
 func confirmNoLogged(h httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
 		// Get session.
-		session, err := sessions.GetSession(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		session := getSession(req)
 		// Not signed.
-		if session == nil {
+		if session.UserName == "" {
 			h(w, req, p)
 			return
 		}
 		// fmt.Fprintln(w, "Not allowed")
-		data := struct{ Session *SessionData }{session}
-		err = tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
+		data := struct{ Session *Session }{session}
+		err := tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
 		HandleError(w, err)
 
 	}

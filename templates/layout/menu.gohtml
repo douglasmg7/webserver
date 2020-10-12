@@ -10,7 +10,7 @@
             <i class="fas fa-xs fa-chevron-up fa-rotate-270"></i>
             &nbspMenu
         </a>
-        {{ range .Session.Categories }}
+        {{ range .Session.ProductCategories }}
             <a class="item" href="/all/{{.}}">
                 {{.}}
             </a>
@@ -18,7 +18,7 @@
     </div>
 </div>
 <!-- Admin -->
-{{if .Session.UserGroups.IsAdmin}}
+{{if .Session.CheckPermission "admin"}}
     <div class="sub-menu">
         <a class="item toggle-items" href="#">
             Admin&nbsp
