@@ -7,10 +7,11 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-const SESSION_ID_COOKIE_NAME = "session_id"
+const SESSION_ID_COOKIE_NAME = "sessionid"
 
 type Session struct {
-	UserID            int    `json:"userId"`
+	SessionID         string
+	UserID            string `json:"userId"`
 	UserName          string `json:"userName"`
 	Permission        uint64 `json:"userPermission"`
 	CartProductsCount uint   `json:"cartProductsCount"`
@@ -58,71 +59,44 @@ func (s *Session) UnsetPermission(p string) {
 	}
 }
 
-func createSession(w http.ResponseWriter, userID string) {
-	// create cookie
-	sUUID := uuid.NewV4()
-	sessionID := sUUID.String()
-	// Save cookie.
-	http.SetCookie(w, &http.Cookie{
-		Name:  SESSION_ID_COOKIE_NAME,
-		Value: sessionID,
-		Path:  "/",
-		// Secure: true, // to use only in https
-		// HttpOnly: true, // Can't be used into js client
-	})
-	redisSetUserID(sessionID, userID)
+func saveSession(session *Session) {
+	redisSetUserSession(session.UserID, session)
 }
 
-func saveSession(userID string, session *Session) {
-	redisSetSession(userID, session)
+func removeSessionID(session *Session) {
+	redisDelSessionIDUserID(session.SessionID)
 }
 
-func removeSession(w http.ResponseWriter, req *http.Request) {
-	c, err := req.Cookie(SESSION_ID_COOKIE_NAME)
-	if err == http.ErrNoCookie {
-		// No cookie.
-		http.Redirect(w, req, "/", http.StatusSeeOther)
-	} else if err != nil {
-		// Some error.
-		log.Printf("[error] Getting cookie. %v", err)
-		http.Redirect(w, req, "/", http.StatusSeeOther)
-	} else {
-		// Remove cookie.
-		c.MaxAge = -1
-		c.Path = "/"
-		// log.Println("changed cookie:", c)
-		http.SetCookie(w, c)
-		http.Redirect(w, req, "/ns/auth/signin", http.StatusSeeOther)
-		redisDelUserID(c.Value)
-	}
-}
-
-func getSession(req *http.Request) *Session {
-	// timeToGetSession = time.Now()
-	userID := getUserIDFromSessionID(req)
-	if userID == "" {
-		return &Session{}
-	}
-	return redisGetSession(userID)
-}
-
-// Return user id from session uuid.
-// Try the cache first.
-func getUserIDFromSessionID(req *http.Request) string {
-	cookie, err := req.Cookie(SESSION_ID_COOKIE_NAME)
+func loadSession(w http.ResponseWriter, r *http.Request) (*Session, bool) {
+	// Get user id from session id
+	cookie, err := r.Cookie(SESSION_ID_COOKIE_NAME)
 	// log.Println("Cookie:", cookie.Value)
-	// log.Println("Cookie-err:", err)
-	// No cookie.
-	if err == http.ErrNoCookie {
-		return ""
-		// some error
-	} else if err != nil {
-		return ""
+	if err != nil && err != http.ErrNoCookie {
+		log.Printf("[error] Getting cookie. %v", err)
+		return &Session{}, false
 	}
-	// Have a cookie.
+	userID := ""
 	if cookie != nil {
-		return redisGetUserID(cookie.Value)
+		userID = redisGetSessionIDUserID(cookie.Value)
 	}
-	// No cookie
-	return ""
+	if userID == "" {
+		// create new anonymous and new cookie
+		sUUID := uuid.NewV4()
+		sessionID := sUUID.String()
+		// save cookie.
+		http.SetCookie(w, &http.Cookie{
+			Name:  SESSION_ID_COOKIE_NAME,
+			Value: sessionID,
+			Path:  "/",
+			// Secure: true, // to use only in https
+			// HttpOnly: true, // Can't be used into js client
+		})
+		// anonymous user
+		userID := "@@" + sessionID
+		redisSetSessionIDUserID(sessionID, userID)
+		session := &Session{}
+		redisSetUserSession(userID, session)
+		return &Session{}, true
+	}
+	return redisGetUserSession(userID), true
 }

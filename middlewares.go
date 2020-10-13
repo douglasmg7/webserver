@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"webserver/models"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -15,53 +16,58 @@ type handleS func(w http.ResponseWriter, req *http.Request, p httprouter.Params,
 // Get session middleware.
 func getSessionMidlleware(h handleS) httprouter.Handle {
 	return func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-		// Get session.
-		session := getSession(req)
-		h(w, req, p, session)
+		// // Get session.
+		// session := getSession(req)
+		// h(w, req, p, session)
+
+		h(w, req, p, &Session{})
 	}
 }
 
 // Check permission middleware.
 func checkPermission(h handleS, permission string) httprouter.Handle {
 	return func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-		// Get session.
-		session := getSession(req)
-		// Not signed.
-		if session.UserName == "" {
-			http.Redirect(w, req, "/auth/signin", http.StatusSeeOther)
-			return
-		}
-		// Have the permission.
-		if permission == "" || session.CheckPermission(permission) {
-			h(w, req, p, session)
-			return
-		}
-		// No Permission.
-		// fmt.Fprintln(w, "Not allowed")
-		data := struct {
-			Session     *Session
-			HeadMessage string
-		}{Session: session}
-		err := tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
-		HandleError(w, err)
+		// // Get session.
+		// session := getSession(req)
+		// // Not signed.
+		// if session.UserName == "" {
+		// http.Redirect(w, req, "/auth/signin", http.StatusSeeOther)
+		// return
+		// }
+		// // Have the permission.
+		// if permission == "" || session.CheckPermission(permission) {
+		// h(w, req, p, session)
+		// return
+		// }
+		// // No Permission.
+		// // fmt.Fprintln(w, "Not allowed")
+		// data := struct {
+		// Session     *Session
+		// HeadMessage string
+		// }{Session: session}
+		// err := tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
+		// HandleError(w, err)
+
+		h(w, req, p, &Session{})
 	}
 }
 
 // Check if not logged.
 func confirmNoLogged(h httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-		// Get session.
-		session := getSession(req)
-		// Not signed.
-		if session.UserName == "" {
-			h(w, req, p)
-			return
-		}
-		// fmt.Fprintln(w, "Not allowed")
-		data := struct{ Session *Session }{session}
-		err := tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
-		HandleError(w, err)
+		// // Get session.
+		// session := getSession(req)
+		// // Not signed.
+		// if session.UserName == "" {
+		// h(w, req, p)
+		// return
+		// }
+		// // fmt.Fprintln(w, "Not allowed")
+		// data := struct{ Session *Session }{session}
+		// err := tmplDeniedAccess.ExecuteTemplate(w, "deniedAccess.tpl", data)
+		// HandleError(w, err)
 
+		h(w, req, p)
 	}
 }
 
@@ -84,7 +90,7 @@ func checkApiAuthorization(h httprouter.Handle) httprouter.Handle {
 }
 
 /**************************************************************************************************
-* Logger middleware
+* Logger
 **************************************************************************************************/
 // Logger struct.
 type logger struct {
@@ -107,22 +113,28 @@ func newLogger(h http.Handler) *logger {
 }
 
 /**************************************************************************************************
-* User middleware
+* User
 **************************************************************************************************/
-type userMiddlware struct {
+type sessionMiddleware struct {
 	handler http.Handler
 }
 
-func (l *userMiddlware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// log.Printf("userMiddlware called")
+func (l *sessionMiddleware) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	session, ok := loadSession(w, r)
+	if !ok {
+		http.Error(w, "Error loading session", http.StatusInternalServerError)
+		return
+	}
+	// log.Printf("sessionMiddleware called")
+	session.ProductCategories = models.Categories
+	session.CartProductsCount = 8
 	ctx := r.Context()
-	// Get new context with key-value "params" -> "httprouter.Params"
-	ctx = context.WithValue(ctx, "user", "John")
-	// Get new http.Request with the new context
+	ctx = context.WithValue(ctx, "session", session)
 	r = r.WithContext(ctx)
+
 	l.handler.ServeHTTP(w, r)
 }
 
-func newUserMiddleware(h http.Handler) *userMiddlware {
-	return &userMiddlware{handler: h}
+func newSessionMiddleware(h http.Handler) *sessionMiddleware {
+	return &sessionMiddleware{handler: h}
 }

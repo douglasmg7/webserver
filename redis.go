@@ -52,32 +52,32 @@ func redisDel(key string) error {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// User id
+// User id by session id
 ////////////////////////////////////////////////////////////////////////////////
-func makeSessionIDKey(uuid string) string {
-	return "sessionid_" + uuid
+func makeSessionKey(ssesionID string) string {
+	return "sessionid_" + ssesionID
 }
 
-func redisSetUserID(uuid string, userID string) {
-	_ = redisDB.Set(makeSessionIDKey(uuid), userID, time.Hour*8760)
+func redisSetSessionIDUserID(ssesionID string, userID string) {
+	_ = redisDB.Set(makeSessionKey(ssesionID), userID, time.Hour*8760)
 }
 
-func redisGetUserID(uuid string) string {
-	return redisGet(makeSessionIDKey(uuid))
+func redisGetSessionIDUserID(ssesionID string) string {
+	return redisGet(makeSessionKey(ssesionID))
 }
 
-func redisDelUserID(uuid string) error {
-	return redisDel(makeSessionIDKey(uuid))
+func redisDelSessionIDUserID(ssesionID string) error {
+	return redisDel(makeSessionKey(ssesionID))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Session
 ////////////////////////////////////////////////////////////////////////////////
-func makeUserIDKey(userID string) string {
+func makeUserKey(userID string) string {
 	return "userid_" + userID
 }
 
-func redisSetSession(userID string, session *Session) {
+func redisSetUserSession(userID string, session *Session) {
 	sessionJSON, err := json.Marshal(session)
 	// if checkError(err) {
 	// return
@@ -85,11 +85,11 @@ func redisSetSession(userID string, session *Session) {
 	if err != nil {
 		log.Printf("[error] Marshalling session. Error: %v", err)
 	}
-	_ = redisDB.Set(makeUserIDKey(userID), sessionJSON, time.Hour*8760)
+	_ = redisDB.Set(makeUserKey(userID), sessionJSON, time.Hour*8760)
 }
 
-func redisGetSession(userID string) (session *Session) {
-	sessionJSON := redisGet(makeUserIDKey(userID))
+func redisGetUserSession(userID string) (session *Session) {
+	sessionJSON := redisGet(makeUserKey(userID))
 	if sessionJSON == "" {
 		return
 	}
@@ -104,7 +104,6 @@ func redisGetSession(userID string) (session *Session) {
 	return
 }
 
-// Get Correios estimate delivery.
-func redisDelSession(userID string) error {
-	return redisDel(makeUserIDKey(userID))
+func redisDelUserSession(userID string) error {
+	return redisDel(makeUserKey(userID))
 }

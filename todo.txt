@@ -1,6 +1,5 @@
-[commit]
-    Removed muiltiplo and unit.
-    Send whole technical product description to create product on zunka site.
+Implement log error. Example on fright.
+Implemnet gracefull shutdown. Example on fright.
 
 implement password change.
 

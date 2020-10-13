@@ -77,6 +77,6 @@ func main() {
 	log.Println("Listen port", PORT)
 	// Why log.Fall work here?
 	// log.Fatal(http.ListenAndServe(":"+port, router))
-	log.Fatal(http.ListenAndServe(":"+PORT, newLogger(newUserMiddleware(router))))
+	log.Fatal(http.ListenAndServe(":"+PORT, newLogger(newSessionMiddleware(router))))
 	// log.Fatal(http.ListenAndServe(":"+PORT, newLogger(router)))
 }

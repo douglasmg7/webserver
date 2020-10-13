@@ -299,8 +299,8 @@ func authSigninHandlerPost(w http.ResponseWriter, req *http.Request, _ httproute
 }
 
 // Signout.
-func authSignoutHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	removeSession(w, req)
+func authSignoutHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	removeSessionID(&Session{})
 }
 
 /**************************************************************************************************
