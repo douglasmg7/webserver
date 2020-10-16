@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"webserver/database"
 	"webserver/models"
 
@@ -56,7 +55,7 @@ func init() {
 	// Init log
 	initLog()
 
-	log.Printf("Running in %v mode (version %s)\n", mode, VERSION)
+	Info.Printf("Running in %v mode (version %s)\n", mode, VERSION)
 }
 
 func main() {
@@ -75,11 +74,7 @@ func main() {
 	// Categories
 	models.UpdateCategories()
 
-	log.Println("Listen port", PORT)
-	Error(fmt.Errorf("Some thing wrong. %v", "Just a test"))
-	debug("Teste: %v, module: %v", "a", 2)
-	warn("Atenção pro horário: %v", "11:11")
-	trace("Já são: %v", "11:31")
+	Info.Println("Listen port", PORT)
 
 	// Why log.Fall work here?
 	// log.Fatal(http.ListenAndServe(":"+port, router))

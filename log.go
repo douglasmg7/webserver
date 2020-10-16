@@ -9,23 +9,36 @@ import (
 	"runtime"
 )
 
+var (
+	Trace *log.Logger
+	Debug *log.Logger
+	Info  *log.Logger
+	Warn  *log.Logger
+	Error *log.Logger
+)
+
 func initLog() {
 	// Log file.
-	logFile, err := os.OpenFile(path.Join(workPath, NAME+".log"), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+	file, err := os.OpenFile(path.Join(workPath, NAME+".log"), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	// Log configuration.
-	mw := io.MultiWriter(os.Stdout, logFile)
-	log.SetOutput(mw)
-	log.SetPrefix("[" + NAME + "] ")
-	log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lmsgprefix)
-	// log.SetFlags(log.Ldate | log.Lmicroseconds | log.Lshortfile)
-	// log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
-	// log.SetFlags(log.LstdFlags | log.Ldate | log.Lshortfile)
-	// log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	mw := io.MultiWriter(os.Stdout, file)
+
+	Trace = log.New(mw, "["+NAME+"] [trace] ", log.Lshortfile|log.Ldate|log.Ltime)
+	Debug = log.New(mw, "["+NAME+"] [debug] ", log.Ldate|log.Ltime)
+	Info = log.New(mw, "["+NAME+"] [info ] ", log.Ldate|log.Ltime)
+	Warn = log.New(mw, "["+NAME+"] [warn ] ", log.Ldate|log.Ltime)
+	Error = log.New(mw, "["+NAME+"] [error] ", log.Lshortfile|log.Ldate|log.Ltime)
+
+	// Trace.Printf("message")
+	// Debug.Printf("message")
+	// Info.Printf("message")
+	// Warn.Printf("message")
+	// Error.Printf("message")
 }
 
+// todo -remove
 func checkError(err error) bool {
 	if err != nil {
 		// notice that we're using 1, so it will actually log where
@@ -37,19 +50,4 @@ func checkError(err error) bool {
 	return false
 }
 
-func Error(err error) {
-	function, file, line, _ := runtime.Caller(1)
-	log.Printf("[error] [%s] [%s:%d] %v", filepath.Base(file), runtime.FuncForPC(function).Name(), line, err)
-}
-
-func debug(format string, a ...interface{}) {
-	log.Printf("[debug] "+format, a...)
-}
-
-func warn(format string, a ...interface{}) {
-	log.Printf("[warn] "+format, a...)
-}
-
-func trace(format string, a ...interface{}) {
-	log.Printf("[trace] "+format, a...)
-}
+// todo - end
